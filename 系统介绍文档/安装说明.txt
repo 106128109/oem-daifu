@@ -1,0 +1,37 @@
+∫ÛÃ®ƒ¨»œ√‹¬Î’À∫≈
+taoke
+qxm19890412
+
+
+php7.0 
+mysql5.7  
+NG
+
+Redis
+
+
+
+
+
+
+
+
+
+Œ±æ≤Ã¨tp
+
+location / {
+   if (!-e $request_filename) {
+   rewrite  ^(.*)$  /index.php?sb=$1  last;
+   break;
+    }
+ }
+  
+ location ^~ /runtime {
+   deny all;
+}
+  location ^~ /Runtime {
+       deny all;
+  }    
+  location ^~ /cert {
+       deny all;
+   }

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>付款DEMO-PHP版</title>
+    <link rel="stylesheet" href="./static/lib/codemirror.css">
+    <link rel="stylesheet" href="./static/lib/colorforth.css">
+    <link rel="stylesheet" href="./static/lib/style.css">
+    <script src="./static/lib/codemirror.js"></script>
+</head>
+<body>
+
+<style>
+    .CodeMirror {margin:10px;border: 1px solid black;min-height:350px;width:100%;font-size:13px}
+    /* textarea{display:none} */
+</style>
+<script src="./static/js/jquery.min.js"></script>
+<select style="padding:5px;margin:10px 0px;width:100%"  id="method">
+    <option value="">请选择接口</option>
+    <option value="agentpay">实时付款接口 -RTPM</option>
+    <option value="queryOrder">订单查询接口 -ODQU</option>
+    <option value="queryAgentpayFee">付款手续费查询 -PTFQ</option>
+    <option value="queryBalance">商户余额查询接口 -MBQU</option>
+    <option value="getClearFileContent">对账单申请接口 -CFCT</option>
+    <option value="getVoucherContent">凭证申请接口 -VHCT</option>
+</select>
+
+<div style="display: flex;align-items:stretch;height:auto">
+    <div id="commonform" style="width:18%;"></div>
+    
+    <!--form-->
+    <div id="secordform"style="width:18%;"></div>
+    <div id="joinCode" style="width:65%;">
+    </div>
+</div>
+<h2>
+    <button id="bt">测试结果</button>&nbsp;
+    <button id="cl">重置参数</button>&nbsp;
+    
+</h2>
+<p>
+<!-- debug模式： 
+    开启<input name="bug" value="1" checked type="radio">  
+    关闭<input name="bug" value="2" type="radio"></p>   -->
+<div id="returnCode" style="display:flex;space-evenly : evenly ">
+</div>
+<script>
+     var debug=true;
+    // $('input[name="bug"]').change(function(){
+    //     return debug = $(this).val()==1 ? debug=true : debug=false;
+    // })
+    $("#returnCode").html('<textarea id="code" name="code" rows="50" cols="10"></textarea>');
+    $('.CodeMirror').remove();
+    let editor = CodeMirror.fromTextArea(document.getElementById("code"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});editor.setOption("theme", "colorforth");
+  
+  function rusub(){
+    $.ajax({
+        url:"./api/form.php",
+        type:'get',
+        data:{
+            type  : 'setdata',
+            method:$('#method').val(),
+            params:$("#ruform").serialize(),
+            config:$("#configform").serialize(),
+        },
+        success:(result)=>{
+            console.log(result);
+        },
+        error:(xhr,status,error)=>{
+            console.log(error);
+            $("#returnCode").html('<textarea id="code" name="code" rows="50" cols="10">'+error+xhr.responseText+'</textarea>');
+            $('.CodeMirror').remove();
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});
+            editor.setOption("theme", "colorforth");
+        },
+        dataType:'json'
+    });
+  }
+  
+
+  $('#method').change(()=>{
+    $.ajax({
+        url:"./api/form.php",
+        type:'get',
+        data:{
+            type  : 'getdata',
+            method:$('#method').val()
+        },
+        success:(result)=>{ 
+            var html,form,configform;
+            try{
+                configform = JSON.parse(result).configform;
+                form = JSON.parse(result).form;
+            }catch{
+                configform = '';
+                form='';    
+            }
+            $("#returnCode").html('<textarea id="code" name="code" rows="50" cols="10"></textarea>');
+            $("#joinCode").html('<textarea id="jcode" name="jcode" rows="50" cols="10"></textarea>');
+            $("#commonform").html('<fieldset class="myCode"><legend>公共参数配置</legend>'+configform+'</fieldset>');
+            $("#secordform").html(form);
+            $('.CodeMirror').remove();
+            var editor = CodeMirror.fromTextArea(document.getElementById("jcode"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});
+            editor.setOption("theme", "colorforth");
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});
+            editor.setOption("theme", "colorforth");
+            rusub();
+    },
+    error:(xhr,status,error)=>{
+        console.log(error);
+        $('.CodeMirror').remove();
+        var editor = CodeMirror.fromTextArea(document.getElementById("code"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});
+        editor.setOption("theme", "colorforth");
+    },
+    });
+  })
+
+  $('#bt').click(()=>{ 
+    $.ajax({
+        url:"./api/main.php",
+        type:'get',
+        data:{
+            method:$('#method').val()
+        },
+        success:(result)=>{ 
+            $("#returnCode").html('<textarea id="code" name="code" rows="50" cols="10">应答报文：\r\n解码前：\r\n</textarea>');
+            $("#joinCode").html('<textarea id="jcode" name="jcode" rows="50" cols="10">请求报文：\r\n</textarea>');
+            try{$("#returnCode").append(result.form);}catch{}
+            try{
+                $("#code").append(JSON.stringify(JSON.parse(result.json), null, "\t"));
+                $("#code").append("\r\n\r\n解码后：\r\n"+JSON.stringify(JSON.parse(result.verify), null, "\t")+"\r\n\r\n详情参考文档：\t"+result.url);
+            }catch{}
+            try{
+                $("#jcode").append("AESKey加密前：\r\n"+JSON.stringify(JSON.parse(result.jjson), null, "\t"))
+                $("#jcode").append("\r\nAESKey加密后：\r\n"+JSON.stringify(JSON.parse(result.vjson), null, "\t"))
+            }catch{}
+            $('.CodeMirror').remove();
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});
+            editor.setOption("theme", "colorforth");
+            var editor = CodeMirror.fromTextArea(document.getElementById("jcode"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});
+            editor.setOption("theme", "colorforth");
+        },
+        error:(xhr,status,error)=>{
+            if(debug){
+                $("#returnCode").html('<textarea id="code" name="code" rows="50" cols="10">'+error+xhr.responseText+'</textarea>');
+            }else{
+                $("#returnCode").html('<textarea id="code" name="code" rows="50" cols="10">入参数值有误，请重置参数后点击保存</textarea>')
+            }
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {mode: {name: "javascript", json: true},lineNumbers: true,lineWrapping: true,});
+            editor.setOption("theme", "colorforth");
+        },
+        dataType:'json'
+    });
+
+  })
+
+  $('#cl').click(()=>{
+    $.ajax({
+        url:"./api/form.php",
+        type:'get',
+        data:{
+            type  : 'deletecookie',
+            method: 'deletecookie'
+        },
+        success:(result)=>{}
+    });
+  })
+
+</script>
+
+
+</body>
+</html>

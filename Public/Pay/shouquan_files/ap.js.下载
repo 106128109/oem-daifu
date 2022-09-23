@@ -1,0 +1,192 @@
+var _AP = {}
+
+var ua = navigator.userAgent.toLowerCase(),
+    locked = false,
+    domLoaded = document.readyState === 'complete',
+    delayToRun;
+
+function customClickEvent() {
+    var clickEvt;
+    if (window.CustomEvent) {
+        clickEvt = new window.CustomEvent('click', {
+            canBubble: true,
+            cancelable: true
+        });
+    } else {
+        clickEvt = document.createEvent('Event');
+        clickEvt.initEvent('click', true, true);
+    }
+
+    return clickEvt;
+}
+
+function getAndroidVersion() {
+    var match = ua.match(/android\s([0-9\.]*)/);
+    return match ? match[1] : false;
+}
+
+var noIntentTest = /aliapp|360 aphone|weibo|windvane|ucbrowser/.test(ua);
+var hasIntentTest = /chrome|samsung/.test(ua);
+var isAndroid = /android|adr/.test(ua) && !(/windows phone/.test(ua));
+var canIntent = !noIntentTest && hasIntentTest && isAndroid;
+
+// 确定浏览器类型
+var isChrome = false;
+var isWebview = false;
+if (ua.match(/(?:chrome|crios)\/([\d\.]+)/)) {
+    isChrome = true;
+    if (ua.match(/version\/[\d+\.]+\s*chrome/)) {
+        isWebview = true;
+    }
+}
+var isOriginalChrome = isAndroid && isChrome && !isWebview;
+
+if (ua.indexOf('m353') > -1 && !noIntentTest) {
+    canIntent = false;
+}
+
+// 安卓走iframe方式唤起
+if (ua.indexOf('android') > -1 && !noIntentTest) {
+    canIntent = false;
+}
+
+/**
+ * open client
+ */
+_AP.open = function (params) {
+    if (!domLoaded && (ua.indexOf('360 aphone') > -1 || canIntent)) {
+        var arg = arguments;
+        delayToRun = function () {
+            _AP.open.apply(null, arg);
+            delayToRun = null;
+        };
+        return;
+    }
+
+    if (locked) {
+        return;
+    }
+    locked = true;
+
+    var o;
+    if (typeof params === 'object') {
+        o = {
+            'ios': encodeURIComponent(JSON.stringify(params)),
+            'android': encodeURIComponent(params.dataString)
+        };
+    } else {
+        console.error('params error, pls use JSON format!')
+    }
+
+    // params fault tolerance
+    if (typeof o.ios !== 'string') {
+        o.ios = '';
+    } else if (typeof o.android !== 'string') {
+        o.android = '';
+    }
+
+    var alipaysUrl = 'alipays://platformapi/startApp?appId=20000125&orderSuffix=' + o.android + '#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end';
+    // chrome下唤起客户端的同时页面还会关闭掉，导致H5不能正常跳转
+    window.needCountDown = false;
+    if ($("#apPayLink")) {
+        $("#apPayLink").remove();
+    }
+    var apPayLink = '<a id="apPayLink" href="' + alipaysUrl + '"></a>';
+    $("body").append(apPayLink);
+    document.getElementById("apPayLink").click();
+
+    //// nonsupport Android intent
+    //if (!canIntent) {
+    //    if (isAndroid) {
+    //        var alipaysUrl = 'alipays://platformapi/startApp?appId=20000125&orderSuffix=' + o.android + '#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end';
+    //    }
+    //    //fix for iOS QQ browser
+    //    else if (ua.indexOf('mqqbrowser') > -1) {
+    //        var alipaysUrl = 'alipay://alipayclient/?' + o.android;
+    //    }
+    //    else {
+    //        var alipaysUrl = 'alipay://alipayclient/?' + o.ios;
+    //    }
+
+    //    if (ua.indexOf('qq/') > -1 || (ua.indexOf('safari') > -1 && ua.indexOf('os 9_') > -1) || (ua.indexOf('safari') > -1 && ua.indexOf('os 10_') > -1) || (ua.indexOf('safari') > -1 && ua.indexOf('os 11_') > -1) || (ua.indexOf('safari') > -1 && ua.indexOf('os 12_') > -1) || (ua.indexOf('safari') > -1 && ua.indexOf('os 13_') > -1)) {
+    //        alert(1);
+    //        var openSchemeLink = document.getElementById('openSchemeLink');
+    //        if (!openSchemeLink) {
+    //            openSchemeLink = document.createElement('a');
+    //            openSchemeLink.id = 'openSchemeLink';
+    //            openSchemeLink.style.display = 'none';
+    //            document.body.appendChild(openSchemeLink);
+    //        }
+
+    //        //openSchemeLink.href = alipaysUrl;
+    //        // oppo浏览器兼容写法
+    //        openSchemeLink.onclick = function () {
+    //            window.location.href = alipaysUrl;
+    //        };
+
+    //        // trigger click
+    //        openSchemeLink.dispatchEvent(customClickEvent());
+    //    } else if (isOriginalChrome) {
+    //        alert(2);
+    //        if (0 === 0) {
+    //            // location.href = alipaysUrl;
+
+    //            // chrome下唤起客户端的同时页面还会关闭掉，导致H5不能正常跳转
+    //            window.needCountDown = false;
+    //            if ($("#apPayLink")) {
+    //                $("#apPayLink").remove();
+    //            }
+    //            var apPayLink = '<a id="apPayLink" href="' + alipaysUrl + '"></a>';
+    //            $("body").append(apPayLink);
+    //            document.getElementById("apPayLink").click();
+    //        }
+    //    } else {
+    //        alert(3);
+    //        var ifr = document.createElement('iframe');
+    //        ifr.src = alipaysUrl;
+    //        ifr.style.display = 'none';
+    //        document.body.appendChild(ifr);
+    //    }
+    //}
+    ////support Android intent
+    //else {
+    //    alert(4);
+    //    var packageKey = 'AlipayGphone';
+    //    var intentUrl = 'alipays://platformapi/startApp?appId=20000125&orderSuffix=' + o.android + '#Intent;scheme=alipays;package=com.eg.android.' + packageKey + ';end';
+
+    //    var openIntentLink = document.getElementById('openIntentLink');
+    //    if (!openIntentLink) {
+    //        openIntentLink = document.createElement('a');
+    //        openIntentLink.id = 'openIntentLink';
+    //        openIntentLink.style.display = 'none';
+    //        document.body.appendChild(openIntentLink);
+    //    }
+
+    //    //openIntentLink.href = intentUrl;
+    //    // oppo浏览器兼容写法
+    //    openIntentLink.onclick = function () {
+    //        window.location.href = intentUrl;
+    //    };
+
+    //    // trigger click
+    //    openIntentLink.dispatchEvent(customClickEvent());
+    //}
+
+    setTimeout(function () {
+        locked = false;
+    }, 2500)
+}
+
+if (!domLoaded) {
+    document.addEventListener('DOMContentLoaded', function () {
+        domLoaded = true;
+        if (typeof delayToRun === 'function') {
+            delayToRun();
+        }
+    }, false);
+}
+
+_AP.pay = function (param) {
+    _AP.open(param);
+}
+window._AP = _AP;

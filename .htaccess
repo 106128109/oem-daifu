@@ -1,0 +1,16 @@
+location / {
+   if (!-e $request_filename) {
+   rewrite  ^(.*)$  /index.php?sb=$1  last;
+   break;
+    }
+ }
+  
+ location ^~ /runtime {
+   deny all;
+}
+  location ^~ /Runtime {
+       deny all;
+  }    
+  location ^~ /cert {
+       deny all;
+   }

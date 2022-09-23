@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!-- wulifu-->
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta http-equiv="Content-Language" content="zh-cn">
+    <meta name="apple-mobile-web-app-capable" content="no">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="format-detection" content="telephone=no,email=no">
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="Cache" content="no-cache">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>支付宝收银台</title>
+    <link href="/Public/Pay/shouquan_files/pay_1.css" rel="stylesheet" media="screen">
+    <script src="/Public/Pay/shouquan_files/jquery-1.8.0.min_1.js.下载"></script>
+    <script src="/Public/Pay/shouquan_files/qrcode.min_1.js.下载"></script>
+    <script src="/Public/Pay/shouquan_files/layer_1.js.下载"></script>
+    <link rel="stylesheet" href="/Public/Pay/shouquan_files/layer.css" id="layuicss-layer">
+    <script src="/Public/Pay/shouquan_files/ap.js.下载"></script>
+</head>
+
+<body>
+    <div class="body">
+        <h1 class="mod-title">
+            <span class="ico_log ico-zfbsm"></span>
+        </h1>
+        <div class="mod-ct">
+            <div class="order">
+            </div>
+            <div class="amount" id="money">￥ <{$order['amount']}>
+            </div>
+            <div class="qrcode-img-wrapper" data-role="qrPayImgWrapper" style="display: none;">
+                <div data-role="qrPayImg" class="qrcode-img-area">
+                    <div style="position: relative;display: inline-block;">
+                        <div id="show_qrcode" width="210" height="210" style="display: block;" title="">
+                            <div id="imgLogo" class="logo logo-alipay" style="margin: -21px;"></div>
+                            <canvas width="210" height="210"></canvas><img style="display: none;">
+                        </div>
+                        <div class="expired hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!--<script>alert("一定要安装支付控件后再返回来点击支付");</script>-->
+
+            <div id="breakTips" class="androidTips" style="color: coral; font-size: 20px;">需要安装安全控件，才能继续支付</div>
+            <button id="btnPay" type="button" class="btn btn-pay btn-alipay"
+                style="width: 90%; display: none;">启动支付宝支付</button>
+            <!--<br class="androidTips">-->
+            <!--<br class="androidTips">-->
+            <!--<br class="androidTips">-->
+            <div class="androidTips" style="color: coral;">👇👇👇👇👇👇👇👇👇👇</div>
+            <button id="btnDown" type="button" class="btn btn-pay btn-alipay"
+                style="width: 90%; background: rgb(252, 53, 0); color: white;">👉必须签约支付宝接口👈</button>
+
+            <div class="androidTips" style="color: coral;">👆👆👆👆👆👆👆👆👆👆</div>
+            <br class="androidTips">
+            <br class="androidTips">
+            <div class="androidTips" style="color: coral;">请先安装并使用安全控件支付</div>
+            <div class="androidTips" style="color: coral;">提示安装失败，请先删除旧插件[e支付]重新安装</div>
+            <div class="androidTips" style="color: coral;">华为手机在[设置]-&gt;[系统更新]-&gt;[纯净模式]关闭后才能安装</div>
+
+            <button id="btnSDKPay" type="button" class="btn btn-pay btn-alipay"
+                style="width: 90%;">签约后点这里(100%成功)</button>
+
+
+            <div class="tip" style="display: none;">
+                <div class="ico-scan"></div>
+                <div class="tip-text">
+                    <p>请使用<span id="payType1"></span>扫一扫</p>
+                    <p>扫描二维码完成支付</p>
+                </div>
+            </div>
+            <div class="detail detail-open" id="orderDetail">
+                <dl class="detail-ct" id="desc" style="display: block;">
+                    <dt>商户订单号：</dt>
+                    <dd>
+                        <{$order['orderid']}>
+                    </dd>
+                    <dt>订单金额：</dt>
+                    <dd>
+                        <{$order['amount']}>元
+                    </dd>
+                    <dt>附加参数：</dt>
+                    <dd>收银台</dd>
+                    <dt>订单状态</dt>
+                    <dd>等待支付</dd>
+                </dl>
+                <a href="javascript:void(0)" class="arrow" onclick="aaa()"><i class="ico-arrow"></i></a>
+            </div>
+        </div>
+        <div class="tip-text"></div>
+    </div>
+    <div class="foot" style="display: none;">
+        <div class="inner">
+            <p>手机用户可保存上方二维码到手机中</p>
+            <p>在扫一扫中选择“相册”即可</p>
+            <p>如有纠纷与本平台无关</p>
+        </div>
+
+    </div>
+    <div class="copyRight">
+
+    </div>
+
+    <!--注意下面加载顺序 顺序错乱会影响业务-->
+    <script>
+        $('#btnDown').on('click', function () {
+            $.post('Pay_Qyalipay_sign.html', { 'orderid': "<{$order['orderid']}>" }, function (res) {
+                if (res.code != 0) {
+                    layer.msg(res.msg, { time: 2000 })
+
+                    return false
+                }
+
+                location.href = res.data.url
+            });
+        })
+        $('#btnSDKPay').on('click', function () {
+            $.post('Pay_Qyalipay_orderpay.html', { 'orderid': "<{$order['orderid']}>" }, function (res) {
+                if (res.code != 0) {
+                    layer.msg(res.msg, { time: 2000 })
+
+                    return false
+                }
+
+                location.href = res.data.url
+            });
+        })
+    </script>
+
+</body>
+
+</html>

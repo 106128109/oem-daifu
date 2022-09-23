@@ -1,0 +1,115 @@
+<!-- saved from url=(0196)http://114.116.47.114:8083/api/toPay/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtY2hfb3JkZXJfaWQiOjEwMjI3ODksImV4cCI6MTY1MzA1OTc0NiwiaWF0IjoxNjUzMDU5NjU2fQ.C28pXOmD81LkcFHBmKoc3slN1gaFQCluF3-bBZnh1V8 -->
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
+  <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" /> 
+  <title>充值</title> 
+  <link rel="stylesheet" href="/Public/weixin/static/css/cashier.css" /> 
+  <style type="text/css">
+    #assis-button-wrapper {
+      display: none;
+      padding: 12px 12px 20px;
+    }
+
+    #assis-button-wrapper a {
+      display: block;
+      box-sizing: border-box;
+      margin: 10px auto;
+      max-width: 300px;
+      padding: 12px 2px;
+      border-radius: 5px;
+      background: white;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    #assis-button-wrapper a.alipay {
+      color: #00a2e9 !important;
+    }
+
+    #assis-button-wrapper a.wechat {
+      color: #00b600 !important;
+    }
+  </style> 
+  <link rel="stylesheet" href="/Public/weixin/static/css/layer.css" id="layuicss-layer" />
+ </head> 
+ <body> 
+  <div> 
+   <div style="display: none;"> 
+    <div data-tank="" data-ok="yes" data-order-id="M21051215260138113708"></div> 
+   </div> 
+   <div class="layout-root alipay"> 
+    <section class="logo-area"> 
+     <img src="/Public/weixin/static/picture/wx-top.jpg" alt="" /> 
+    </section> 
+    <div class="layout-wrapper"> 
+     <div class="amount">
+       支付 &yen;
+      <span class="number">100</span> 
+     </div> 
+     <div class="order-no">
+      实际支付金额以订单为准
+     </div> 
+     <section class="qr-section-wrapper"> 
+      <div class="qr-section"> 
+       <div id="timer-wrapper"> 
+        <img id="countdown-img" width="132" height="132" src="/Public/weixin/static/picture/loading.svg" alt="" class="twemoji twemoji-lg" /> 
+       </div> 
+       <div class="tip theme"> 
+        <span><strong id="secs">26</strong> 秒</span> 
+        <br /> 
+        <span id="waiting" class="small green">匹配成功</span> 
+       </div> 
+      </div> 
+     </section> 
+     <section id="assis-button-wrapper" style="display: block;"> 
+      <div>
+       如果没有自动跳转，请点击:
+      </div> 
+      <a class="wechat" href="<{$url}>" target="_blank">启动<span>充值</span>...</a> 
+     </section> 
+     <section style="color:white"> 
+      <div>
+       请务必在90秒内完成支付，否则不到账，不退款；
+      </div> 
+      <div>
+       付款链接不可重复使用。
+      </div> 
+     </section> 
+    </div> 
+   </div> 
+  </div>
+  
+  <script src="https://unpkg.com/callapp-lib"></script>
+
+    <script>
+    const options = {
+      scheme: {
+    	protocol: 'weixin' //必填项 URL Scheme 的 scheme 字段，要打开的 APP 的标识，比如这里是微信的标识
+      },
+      intent: { //安卓原生谷歌浏览器必须传递 Intent 协议地址，才能唤起 APP
+    	// 这两个是intent的必填项
+    	package: 'com.tencent.mm',//腾讯微信包名
+    	scheme: 'weixin'
+      },
+      appstore: 'https://weixin.qq.com/', //必填项 APP 的下载地址，比如这里是微信的下载地址
+    
+      yingyongbao: 'https://sj.qq.com/myapp/detail.htm?apkName=com.tencent.mm', //必填项 APP 的应用宝地址，比如这里微信的应用宝下载地址
+    
+      fallback: location.href //必填项 唤起app端失败后跳转的地址。
+    };
+    
+    //callapp-lib 中传递出来的是一个类，你需要将它实例化，然后才能去调用实例对象的方法
+    const callLib = new CallApp(options);
+     
+    // 这里是唤端方法。
+    callLib.open({
+      // 如果只是唤起app，不需要打开app的某个页面，填空字符串就可以
+      path: '<{$url}>'
+      //打开app某个页面，需要接收的参数。如果没有就不用写
+      //param: {},
+    });
+    </script>
+
+ </body>
+</html>
